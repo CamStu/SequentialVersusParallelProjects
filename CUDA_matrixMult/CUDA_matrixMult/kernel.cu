@@ -33,8 +33,12 @@ int main(void)
 {
 //	int N = 1 << 20;	//Million elements
 	int width = 10000, height = 10000; //10,000x10,000
-
 	float *x, *y, *z;
+
+	cudaEvent_t start, stop;
+	float time = 0;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 
 	// Allocate Unified Memory – accessible from CPU or GPU
 	// While 1D arrays, these will be accessed by converting 2D index space to linear space
@@ -51,10 +55,20 @@ int main(void)
 	//A 10,000x10,000 Product matrix could be computer with one thread per entry with 100x100 blocks with 100x100 threads each
 	dim3 blockSize(100, 100);
 	dim3 gridSize(100, 100);
+
+	cudaEventRecord(start, 0);
 	MatrixMult <<< gridSize, blockSize >>> (x, y, z);	//Block and thread dimensions chosen to be within hardware constraints
+	//Timing information
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&time, start, stop);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
+
 	// Wait for GPU to finish before accessing on host
 	cudaDeviceSynchronize();
 	printf("Operation complete\n");
+	printf("Elapsed time on GPU= %f ms", time);
 	
 
 	// Free memory
