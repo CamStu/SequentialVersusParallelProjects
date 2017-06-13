@@ -13,21 +13,15 @@
 
 #define MAX_SOURCE_SIZE (0x100000)
 
-const int width = 10000;
-const int height = 10000;
+const int width = 100;
+const int height = 100;
 
 int main(void) {
 	printf("started running\n");
 
 	// Create the two input vectors
 	int i;
-	const int LIST_SIZE = 1024;
-	int *A = (int*)malloc(sizeof(int)*LIST_SIZE);
-	int *B = (int*)malloc(sizeof(int)*LIST_SIZE);
-	for (i = 0; i < LIST_SIZE; i++) {
-		A[i] = i;
-		B[i] = LIST_SIZE - i;
-	}
+
 	//	Create arrays
 	float *x, *y, *z;
 
@@ -40,7 +34,6 @@ int main(void) {
 			x[i*width + j] = 1.f;
 			y[i*width + j] = 2.f;
 		}
-
 	
 	// Load the kernel source code into the array source_str
 	FILE *fp;
@@ -56,7 +49,6 @@ int main(void) {
 	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
 	fclose(fp);
 
-
 	// Get platform and device information, choosing the first device
 	cl_device_id device_id = NULL;
 	cl_uint ret_num_devices;
@@ -70,7 +62,6 @@ int main(void) {
 
 	ret = clGetDeviceIDs(platforms[1], CL_DEVICE_TYPE_ALL, 1,
 		&device_id, &ret_num_devices);
-
 
 	// Create an OpenCL context
 	cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
@@ -100,30 +91,31 @@ int main(void) {
 	// Build the program
 	ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
 	
-
 	// Create the OpenCL kernel
-	cl_kernel kernel = clCreateKernel(program, "vector_add", &ret);
+	cl_kernel kernel = clCreateKernel(program, "mult_mat", &ret);
 
 	// Set the arguments of the kernel
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&x_mem);
 	ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&y_mem);
 	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&z_mem);
-
+	
 	// Execute the OpenCL kernel on the list
-	size_t global_item_size = LIST_SIZE; // Process the entire lists
-	size_t local_item_size = 64; // Divide work items into groups of 64
+	//size_t global_item_size = LIST_SIZE; // Process the entire lists
+	//size_t local_item_size = 64; // Divide work items into groups of 64
 							
 	size_t global_size[] = { width,height };
-	size_t group_pattern[] = {};
-	size_t local_size[] = {};
+	//size_t group_pattern[] = {100,100};
+	size_t local_size[] = {10,10};
 	//Execute kernel
 	ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
-		&global_item_size, &local_item_size, 0, NULL, NULL);
+		&global_size, &local_size, 0, NULL, NULL);
 	
 	// Read the memory buffer C on the device to the local variable z
 	ret = clEnqueueReadBuffer(command_queue, z_mem, CL_TRUE, 0,
 		width*height * sizeof(float), z, 0, NULL, NULL);
 	
+	printf("zero index of z= %f\n", z[0]);
+	//printf("1000 index of z= %f\n", z[1000]);
 
 	// Clean up
 	ret = clFlush(command_queue);

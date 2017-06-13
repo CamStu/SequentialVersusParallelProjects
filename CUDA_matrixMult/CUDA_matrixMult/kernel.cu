@@ -19,20 +19,20 @@ void MatrixMult(float *a, float *b, float *c) {
 	int col = blockIdx.y*blockDim.y + threadIdx.y;
 	float val = 0;
 
-	if (row > 10000 || col > 10000)
+	if (row > 100 || col > 100) 
 		return;
 
-	for (int i = 0; i < 10000; i++) {
-		val += a[row * 10000 + i] * b[i * 10000 + col];
+	for (int i = 0; i < 100; i++) {
+		val += a[row * 100 + i] * b[i * 100 + col];
 	}
-	c[row * 10000 + col] = val;
+	c[row * 100 + col] = val;
 }
 
 
 int main(void)
 {
 //	int N = 1 << 20;	//Million elements
-	int width = 10000, height = 10000; //10,000x10,000
+	int width = 100, height = 100; //10,000x10,000
 	float *x, *y, *z;
 
 	cudaEvent_t start, stop;
@@ -53,11 +53,12 @@ int main(void)
 			y[i*width + j] = 2.0f;
 		}
 	//A 10,000x10,000 Product matrix could be computer with one thread per entry with 100x100 blocks with 100x100 threads each
-	dim3 blockSize(100, 100);
-	dim3 gridSize(100, 100);
+	dim3 blockSize(10, 10);
+	dim3 gridSize(10, 10);
 
 	cudaEventRecord(start, 0);
 	MatrixMult <<< gridSize, blockSize >>> (x, y, z);	//Block and thread dimensions chosen to be within hardware constraints
+	
 	//Timing information
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
@@ -67,9 +68,10 @@ int main(void)
 
 	// Wait for GPU to finish before accessing on host
 	cudaDeviceSynchronize();
+
 	printf("Operation complete\n");
 	printf("Elapsed time on GPU= %f ms", time);
-	
+	printf("Zero index of z= %f\n", z[0]);
 
 	// Free memory
 	cudaFree(x);

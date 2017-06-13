@@ -11,21 +11,21 @@
 
 float dotprod(int row, int col, float **a, float **b) {
 	float val = 0;
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < 100; i++)
 		val += a[row][i] * b[i][col];
 	return val;
 }
 
 //Multiplies a,b stores result in c
 void MatrixMult(float **a, float **b, float **c) {
-	for (int i = 0; i<1000; i++)
-		for (int j = 0; j < 1000; j++) {
+	for (int i = 0; i<100; i++)
+		for (int j = 0; j < 100; j++) {
 			c[i][j] = dotprod(i, j, a, b);
 		}
 }
 
-const int width = 10000;
-const int height = 10000;
+const int width = 100;
+const int height = 100;
 
 int main(void)
 {
@@ -69,7 +69,8 @@ int main(void)
 	printf("Operation complete\n");
 	printf("Time elapsed on CPU= %f", time);
 	printf(" seconds\n");
-	
+	printf("zero index of z= %f\n", z[0][0]);
+
 	// Free memory
 	free(x);
 	free(y);
