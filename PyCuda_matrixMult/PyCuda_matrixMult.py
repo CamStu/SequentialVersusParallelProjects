@@ -5,7 +5,7 @@ from pycuda import driver, compiler, gpuarray, tools
 import pycuda.autoinit
 
 kernel_code = """
-void MatrixMult(float *a, float *b, float *c) {
+__global__ void MatrixMult(float *a, float *b, float *c) {
 	int row = blockIdx.x*blockDim.x + threadIdx.x;
 	int col = blockIdx.y*blockDim.y + threadIdx.y;
 	float val = 0;
@@ -28,6 +28,10 @@ agpu = gpuarray.to_gpu(a)
 bgpu = gpuarray.to_gpu(b)
 cgpu = gpuarray.to_gpu(c)
 
+#Timing information
+start = pycuda.driver.Event()
+end   = pycuda.driver.Event()
+
 #Compile kernel
 mod = compiler.SourceModule(kernel_code)
 
@@ -35,8 +39,12 @@ mod = compiler.SourceModule(kernel_code)
 MatrixMult = mod.get_function("MatrixMult")
 
 grid = (10,10)
-block =(10,10)
+block =(10,10,1)
 #Call kernel function
-MatrixMult(apu,bgpu,cgpu, block=block, grid=grid )
+start.record() #Start timing
+MatrixMult(agpu,bgpu,cgpu, block=block, grid=grid )
+end.record()  #End timing
+end.synchronize()
 
 print("All done")
+print("Timing on the gpu:",start.time_till(end),"ms")
