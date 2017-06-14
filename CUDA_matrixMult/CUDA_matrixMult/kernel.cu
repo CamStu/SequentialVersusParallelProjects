@@ -31,8 +31,7 @@ void MatrixMult(float *a, float *b, float *c) {
 
 int main(void)
 {
-//	int N = 1 << 20;	//Million elements
-	int width = 100, height = 100; //10,000x10,000
+	int width = 100, height = 100; //100x100
 	float *x, *y, *z;
 
 	cudaEvent_t start, stop;
@@ -70,8 +69,7 @@ int main(void)
 	cudaDeviceSynchronize();
 
 	printf("Operation complete\n");
-	printf("Elapsed time on GPU= %f ms", time);
-	printf("Zero index of z= %f\n", z[0]);
+	printf("Elapsed time on GPU= %f ms \n", time);
 
 	// Free memory
 	cudaFree(x);
