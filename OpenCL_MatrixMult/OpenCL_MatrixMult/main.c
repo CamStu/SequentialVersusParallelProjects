@@ -67,7 +67,7 @@ int main(void) {
 	cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
 
 	// Create a command queue
-	cl_command_queue command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+	cl_command_queue command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
 
 	// Create memory buffers on the device for each vector 
 	cl_mem x_mem = clCreateBuffer(context, CL_MEM_READ_ONLY,
@@ -106,16 +106,24 @@ int main(void) {
 	size_t global_size[] = { width,height };
 	//size_t group_pattern[] = {100,100};
 	size_t local_size[] = {10,10};
+	cl_event event;
+	clFinish(command_queue);
 	//Execute kernel
 	ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
-		&global_size, &local_size, 0, NULL, NULL);
+		&global_size, &local_size, 0, NULL, &event);
 	
+	clWaitForEvents(1, &event);
 	// Read the memory buffer C on the device to the local variable z
 	ret = clEnqueueReadBuffer(command_queue, z_mem, CL_TRUE, 0,
 		width*height * sizeof(float), z, 0, NULL, NULL);
 	
-	printf("zero index of z= %f\n", z[0]);
-	//printf("1000 index of z= %f\n", z[1000]);
+	printf("All done");
+	cl_ulong start, end;
+	double total_time;
+	clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+	clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+	total_time = end - start;
+	printf("\nExecution time in milliseconds = %f ms\n", (total_time*1.0e-6f));
 
 	// Clean up
 	ret = clFlush(command_queue);
